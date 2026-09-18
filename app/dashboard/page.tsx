@@ -54,6 +54,13 @@ export default function DashboardPage() {
         >
           + Registrar Nuevo Trabajador
         </a>
+        
+        <a 
+          href="/admin/gestion" 
+          className="inline-block bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition mb-4 ml-2"
+        >
+          ⚙️ Gestionar Trabajadores
+        </a>
         <div style={styles.controles}>
           <input
             type="date"
