@@ -15,7 +15,10 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Trabajador no encontrado' }, { status: 404 });
     }
 
-    // Eliminar el trabajador
+    // Primero eliminamos los registros de asistencia asociados
+    await pool.query('DELETE FROM registros_asistencia WHERE usuario_id = $1', [id]);
+
+    // Luego eliminamos al trabajador
     await pool.query('DELETE FROM usuarios WHERE id = $1', [id]);
 
     return NextResponse.json({ success: true, message: 'Trabajador eliminado exitosamente' });
