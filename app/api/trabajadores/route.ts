@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,15 +17,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Validar que el DNI no exista ya
-    const existe = await pool.query('SELECT id FROM trabajadores WHERE dni = $1', [dni]);
+    const existe = await pool.query('SELECT id FROM usuarios WHERE dni = $1', [dni]);
     if (existe.rows.length > 0) {
-      return NextResponse.json({ error: 'Ya existe un trabajador con ese DNI' }, { status: 400 });
+      return NextResponse.json({ error: 'Ya existe un usuario con ese DNI' }, { status: 400 });
     }
 
-    // Insertar nuevo trabajador
+    // Hashear el PIN antes de guardarlo (10 rondas de salt)
+    const pinHash = await bcrypt.hash(pin, 10);
+
+    // Insertar nuevo usuario
     await pool.query(
-      'INSERT INTO trabajadores (nombre, dni, pin, area) VALUES ($1, $2, $3, $4)',
-      [nombre, dni, pin, area]
+      'INSERT INTO usuarios (dni, nombre_completo, pin_hash, area) VALUES ($1, $2, $3, $4)',
+      [dni, nombre, pinHash, area]
     );
 
     return NextResponse.json({ success: true, message: 'Trabajador registrado exitosamente' });
