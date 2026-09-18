@@ -68,6 +68,34 @@ export default function GestionTrabajadores() {
     }
   };
 
+  const handleEliminar = async (id: string, nombre: string) => {
+    const confirmacion = window.confirm(`¿Estás seguro de eliminar a ${nombre}? Esta acción no se puede deshacer.`);
+    
+    if (!confirmacion) return;
+
+    setMensaje('');
+    setError('');
+
+    try {
+      const res = await fetch('/api/gestion/eliminar', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        setMensaje(`✅ ${nombre} eliminado exitosamente`);
+        cargarTrabajadores(); // Recargar la lista
+      } else {
+        setError(`❌ Error: ${data.error}`);
+      }
+    } catch (e) {
+      setError('❌ Error de conexión con el servidor');
+    }
+  };
+
   return (
     <div style={styles.contenedor}>
       <div style={styles.header}>
@@ -107,44 +135,54 @@ export default function GestionTrabajadores() {
                   <td style={styles.td}>{t.dni}</td>
                   <td style={styles.td}>{t.area || '—'}</td>
                   <td style={styles.td}>
-                    {mostrarFormulario === t.dni ? (
-                      <div style={styles.formularioPin}>
-                        <input
-                          type="password"
-                          value={nuevoPin}
-                          onChange={(e) => setNuevoPin(e.target.value)}
-                          placeholder="Nuevo PIN (4 dígitos)"
-                          maxLength={4}
-                          style={styles.inputPin}
-                        />
-                        <button
-                          onClick={() => handleResetPin(t.dni)}
-                          style={styles.botonGuardar}
-                        >
-                          Guardar
-                        </button>
-                        <button
-                          onClick={() => {
-                            setMostrarFormulario('');
-                            setNuevoPin('');
-                          }}
-                          style={styles.botonCancelar}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setDniSeleccionado(t.dni);
-                          setMostrarFormulario(t.dni);
-                          setNuevoPin('');
-                        }}
-                        style={styles.botonReset}
-                      >
-                        Cambiar PIN
-                      </button>
-                    )}
+                    <div style={styles.acciones}>
+                      {mostrarFormulario === t.dni ? (
+                        <div style={styles.formularioPin}>
+                          <input
+                            type="password"
+                            value={nuevoPin}
+                            onChange={(e) => setNuevoPin(e.target.value)}
+                            placeholder="Nuevo PIN (4 dígitos)"
+                            maxLength={4}
+                            style={styles.inputPin}
+                          />
+                          <button
+                            onClick={() => handleResetPin(t.dni)}
+                            style={styles.botonGuardar}
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMostrarFormulario('');
+                              setNuevoPin('');
+                            }}
+                            style={styles.botonCancelar}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              setDniSeleccionado(t.dni);
+                              setMostrarFormulario(t.dni);
+                              setNuevoPin('');
+                            }}
+                            style={styles.botonReset}
+                          >
+                            Cambiar PIN
+                          </button>
+                          <button
+                            onClick={() => handleEliminar(t.id, t.nombre_completo)}
+                            style={styles.botonEliminar}
+                          >
+                            Eliminar
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -212,10 +250,16 @@ const styles: Record<string, React.CSSProperties> = {
   },
   tr: { borderBottom: '1px solid #334155' },
   td: { padding: '0.75rem 1rem', color: '#e2e8f0', fontSize: '0.9rem' },
+  acciones: {
+    display: 'flex',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
+  },
   formularioPin: {
     display: 'flex',
     gap: '0.5rem',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   inputPin: {
     background: '#0f172a',
@@ -246,6 +290,16 @@ const styles: Record<string, React.CSSProperties> = {
   botonReset: {
     background: '#f59e0b',
     color: '#0f172a',
+    border: 'none',
+    borderRadius: '0.25rem',
+    padding: '0.25rem 0.5rem',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+  },
+  botonEliminar: {
+    background: '#ef4444',
+    color: '#fff',
     border: 'none',
     borderRadius: '0.25rem',
     padding: '0.25rem 0.5rem',
